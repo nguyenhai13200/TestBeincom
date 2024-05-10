@@ -14,10 +14,10 @@ const Splash = () => {
       navigation.dispatch(
         CommonActions.reset({
           index: 0,
-          routes: [{name: ERootStack.Main}],
+          routes: [{name: ERootStack.Login}],
         }),
       );
-    }, 2000);
+    }, 1500);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
   return (

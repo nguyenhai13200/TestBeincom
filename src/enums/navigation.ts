@@ -5,5 +5,6 @@ export enum EBottomTab {
 }
 export enum ERootStack {
   Splash = 'Splash',
+  Login = 'Login',
   Main = 'Main',
 }
