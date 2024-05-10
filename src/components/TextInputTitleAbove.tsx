@@ -54,7 +54,7 @@ const TextInputTitleAbove = (props: Props) => {
           value={text}
           placeholder={props.placeholder}
           placeholderTextColor={EColor.color_666666}
-          style={[styles.flex, props.style]}
+          style={[styles.flex, styles.pd0, props.style]}
           onChangeText={setText}
           onFocus={handleFocus}
           onBlur={handleBlur}
@@ -99,4 +99,5 @@ const styles = StyleSheet.create({
     marginTop: rh(8),
     alignItems: 'center',
   },
+  pd0: {padding: 0},
 });

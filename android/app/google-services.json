@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "764760717435",
+    "project_id": "testbeincom",
+    "storage_bucket": "testbeincom.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:764760717435:android:a7e01515a8ff00a64a4ade",
+        "android_client_info": {
+          "package_name": "com.testbeincom"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBM4l_y_X46WMRVrwU4ioKajZ5Y89-t5VQ"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
