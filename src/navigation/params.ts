@@ -6,5 +6,6 @@ export type BottomTabParams = {
   [EBottomTab.Menu]: undefined;
 };
 export type RootStackParams = {
+  [ERootStack.Splash]: undefined;
   [ERootStack.Main]: undefined;
 };

@@ -6,6 +6,7 @@ import {EColor} from 'src/enums/colors';
 import IconListTodos from 'src/media/icons/IconListTodos';
 import IconTodosToday from 'src/media/icons/IconTodosToday';
 import IconMenu from 'src/media/icons/IconMenu';
+import {rh} from 'src/helpers/responsive';
 
 const tabIcon = [
   {
@@ -92,16 +93,16 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    paddingTop: 10,
+    paddingTop: rh(10),
   },
   textBtnActive: {
     color: EColor.primary,
     fontWeight: 'bold',
-    fontSize: 12,
+    fontSize: rh(12),
   },
   textBtn: {
     color: EColor.black,
-    fontSize: 12,
+    fontSize: rh(12),
   },
-  mt2: {marginTop: 2},
+  mt2: {marginTop: rh(2)},
 });
