@@ -1,11 +1,18 @@
-import {View, Text} from 'react-native';
 import React from 'react';
+import {createStackNavigator} from '@react-navigation/stack';
+import BottomTabNavigation from './BottomTabNavigation';
+import {RootStackParams} from './params';
+import {ERootStack} from 'src/enums/navigation';
+
+const Stack = createStackNavigator<RootStackParams>();
 
 const AppNavigation = () => {
   return (
-    <View>
-      <Text>AppNavigation</Text>
-    </View>
+    <Stack.Navigator
+      screenOptions={{headerShown: false}}
+      initialRouteName={ERootStack.Main}>
+      <Stack.Screen name={ERootStack.Main} component={BottomTabNavigation} />
+    </Stack.Navigator>
   );
 };
 
