@@ -7,4 +7,6 @@ export enum ERootStack {
   Splash = 'Splash',
   Login = 'Login',
   Main = 'Main',
+  LoadingModal = 'LoadingModal',
+  SignUp = 'SignUp',
 }

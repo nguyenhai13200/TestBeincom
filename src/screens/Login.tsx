@@ -22,9 +22,18 @@ import Animated, {
   useSharedValue,
   withTiming,
 } from 'react-native-reanimated';
+import {
+  CommonActions,
+  StackActions,
+  useNavigation,
+} from '@react-navigation/native';
+import {StackNavigationProp} from '@react-navigation/stack';
+import {RootStackParams} from 'src/navigation/params';
+import {ERootStack} from 'src/enums/navigation';
 const AnimatedImage = Animated.createAnimatedComponent(Image);
 
 const Login = () => {
+  const navigation = useNavigation<StackNavigationProp<RootStackParams>>();
   const {top} = useSafeAreaInsets();
   const {height} = useWindowDimensions();
   const offset = useSharedValue<number>(0);
@@ -44,13 +53,19 @@ const Login = () => {
     );
     scale.value = withTiming(60, {duration: 400});
   }, [offset, logoLayoutX.value, scale]);
+
   const handleKeyboardHide = useCallback(() => {
     offset.value = withTiming(0, {duration: 400});
     scale.value = withTiming(80, {duration: 400});
   }, [offset, scale]);
+
   const handleLayoutLogo = ({nativeEvent}: LayoutChangeEvent) => {
     logoLayoutX.value = nativeEvent.layout.x;
   };
+
+  const handleLogin = useCallback(() => {
+    navigation.dispatch(StackActions.push(ERootStack.LoadingModal));
+  }, [navigation]);
 
   return (
     <KeyboardAwareScrollView
@@ -87,12 +102,15 @@ const Login = () => {
             <Text style={styles.textForgotPass}>Forgot password?</Text>
           </TouchableOpacity>
         </View>
-        <TouchableOpacity style={styles.btnLogin}>
+        <TouchableOpacity style={styles.btnLogin} onPress={handleLogin}>
           <Text style={styles.textBtnLogin}>Log In</Text>
         </TouchableOpacity>
         <View style={styles.boxTextSignUp}>
           <Text style={styles.textSignUp}>Don't have an account? </Text>
-          <TouchableOpacity>
+          <TouchableOpacity
+            onPress={() =>
+              navigation.dispatch(CommonActions.navigate(ERootStack.SignUp))
+            }>
             <Text style={[styles.textSignUp, {color: EColor.blue}]}>
               Sign Up
             </Text>

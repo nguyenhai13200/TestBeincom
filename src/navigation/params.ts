@@ -9,4 +9,6 @@ export type RootStackParams = {
   [ERootStack.Splash]: undefined;
   [ERootStack.Login]: undefined;
   [ERootStack.Main]: undefined;
+  [ERootStack.LoadingModal]: undefined;
+  [ERootStack.SignUp]: undefined;
 };

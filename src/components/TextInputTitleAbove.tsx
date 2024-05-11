@@ -21,16 +21,19 @@ type Props = {
   style?: StyleProp<TextStyle>;
   placeholder?: string;
   type: 'input' | 'password';
+  value?: string;
+  onChangeText?: React.Dispatch<React.SetStateAction<string>>;
+  error?: string;
 };
 
 const TextInputTitleAbove = (props: Props) => {
-  const [text, setText] = useState('');
   const [showPass, setShowPass] = useState(false);
   const [focus, setFocus] = useState(false);
 
   const handleRemoveText = useCallback(() => {
-    setText('');
-  }, []);
+    props.onChangeText && props.onChangeText('');
+  }, [props]);
+
   const handleOnOrOffPassword = useCallback(() => {
     setShowPass(prev => !prev);
   }, []);
@@ -42,6 +45,13 @@ const TextInputTitleAbove = (props: Props) => {
   const handleBlur = useCallback(() => {
     setFocus(false);
   }, []);
+
+  const handleChangeText = useCallback(
+    (txt: string) => {
+      props.onChangeText && props.onChangeText(txt);
+    },
+    [props],
+  );
   return (
     <View style={props.containerStyle}>
       <Text style={styles.title}>{props.title || 'Title'}</Text>
@@ -51,21 +61,20 @@ const TextInputTitleAbove = (props: Props) => {
           {borderColor: focus ? EColor.primary : EColor.color_cccccc},
         ]}>
         <TextInput
-          value={text}
+          autoCapitalize="none"
+          value={props.value}
           placeholder={props.placeholder}
           placeholderTextColor={EColor.color_666666}
           style={[styles.flex, styles.pd0, props.style]}
-          onChangeText={setText}
+          onChangeText={handleChangeText}
           onFocus={handleFocus}
           onBlur={handleBlur}
           secureTextEntry={props.type === 'password' ? !showPass : false}
         />
-        {text && props.type === 'input' && (
-          <IconClose
-            width={rh(18)}
-            height={rh(18)}
-            onPress={handleRemoveText}
-          />
+        {props.value && props.type === 'input' && (
+          <TouchableOpacity onPress={handleRemoveText}>
+            <IconClose width={rh(18)} height={rh(18)} />
+          </TouchableOpacity>
         )}
         {props.type === 'password' && (
           <TouchableOpacity onPress={handleOnOrOffPassword}>
@@ -77,6 +86,7 @@ const TextInputTitleAbove = (props: Props) => {
           </TouchableOpacity>
         )}
       </View>
+      {props.error && <Text style={styles.textError}>{props.error}</Text>}
     </View>
   );
 };
@@ -100,4 +110,8 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   pd0: {padding: 0},
+  textError: {
+    color: EColor.color_FF0B0B,
+    marginTop: rh(3),
+  },
 });
