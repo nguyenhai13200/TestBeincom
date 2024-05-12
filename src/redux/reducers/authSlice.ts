@@ -20,17 +20,15 @@ export const authSlice = createSlice({
   initialState,
   reducers: {
     setAuth: (state: AuthState, action: PayloadAction<AuthState>) => {
-      // state = action.payload not work @@
-      const {id, email, fullName, username} = action.payload;
-      state.id = id;
-      state.email = email;
-      state.fullName = fullName;
-      state.username = username;
+      Object.assign(state, action.payload);
+    },
+    resetAuth: (state: AuthState) => {
+      Object.assign(state, initialState);
     },
   },
 });
 
 // Action creators are generated for each case reducer function
-export const {setAuth} = authSlice.actions;
+export const {setAuth, resetAuth} = authSlice.actions;
 
 export default authSlice.reducer;

@@ -30,15 +30,9 @@ const Splash = () => {
           .get();
 
         if (checkUserExist.docs.length > 0) {
-          const {id, email, username, fullName, password} =
-            checkUserExist.docs[0].data();
+          const {id, email, username, fullName} = checkUserExist.docs[0].data();
 
           dispatch(setAuth({id, email, username, fullName}));
-
-          await AsyncStorage.setItem(
-            EStorageState.Auth,
-            JSON.stringify({email, password}),
-          );
 
           navigation.dispatch(
             CommonActions.reset({
@@ -54,6 +48,13 @@ const Splash = () => {
       } catch (error) {
         console.log('Login error:', error);
       }
+    } else {
+      setTimeout(() => {
+        // Use sett to clean the warning log (Sending `onAnimatedValueUpdate` with no listeners registered.)
+        navigation.dispatch(
+          CommonActions.reset({index: 0, routes: [{name: ERootStack.Login}]}),
+        );
+      }, 1000);
     }
   };
   useEffect(() => {

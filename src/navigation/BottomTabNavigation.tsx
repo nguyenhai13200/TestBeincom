@@ -17,7 +17,9 @@ const tabBarBottom = (props: BottomTabBarProps) => {
 };
 const BottomTabNavigation = () => {
   return (
-    <BottomTab.Navigator tabBar={tabBarBottom}>
+    <BottomTab.Navigator
+      screenOptions={{headerShown: false}}
+      tabBar={tabBarBottom}>
       <BottomTab.Screen name={EBottomTab.Todos} component={Todos} />
       <BottomTab.Screen name={EBottomTab.Today} component={Today} />
       <BottomTab.Screen name={EBottomTab.Menu} component={Menu} />

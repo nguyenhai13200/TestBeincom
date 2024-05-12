@@ -65,7 +65,7 @@ const TextInputTitleAbove = (props: Props) => {
           value={props.value}
           placeholder={props.placeholder}
           placeholderTextColor={EColor.color_666666}
-          style={[styles.flex, styles.pd0, props.style]}
+          style={[styles.textInput, styles.pd0, props.style]}
           onChangeText={handleChangeText}
           onFocus={handleFocus}
           onBlur={handleBlur}
@@ -94,7 +94,7 @@ const TextInputTitleAbove = (props: Props) => {
 export default memo(TextInputTitleAbove);
 
 const styles = StyleSheet.create({
-  flex: {flex: 1},
+  textInput: {flex: 1, color: EColor.black},
   title: {
     fontSize: rh(16),
     color: EColor.black,
