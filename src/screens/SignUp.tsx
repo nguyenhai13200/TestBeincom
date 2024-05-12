@@ -1,7 +1,6 @@
 import {
   Image,
   LayoutChangeEvent,
-  Platform,
   StyleSheet,
   Text,
   TouchableOpacity,
@@ -50,13 +49,13 @@ import {
 
 const AnimatedImage = Animated.createAnimatedComponent(Image);
 
-export type TFormValue = {
+export type TFormSignUpValue = {
   email: string;
   fullName: string;
   username: string;
   password: string;
 };
-const initialValues: TFormValue = {
+const initialValues: TFormSignUpValue = {
   email: '',
   fullName: '',
   username: '',
@@ -100,10 +99,7 @@ const SignUp = () => {
   }));
 
   const handleKeyboardShow = useCallback(() => {
-    offset.value = withTiming(
-      -(logoLayoutX.value + (Platform.OS === 'android' ? 10 : 0)),
-      {duration: 400},
-    );
+    offset.value = withTiming(-(logoLayoutX.value + 10), {duration: 400});
     scale.value = withTiming(60, {duration: 400});
   }, [offset, logoLayoutX.value, scale]);
 
@@ -117,35 +113,43 @@ const SignUp = () => {
   };
 
   const handleSignUp = useCallback(
-    async (value: TFormValue, formikHelpers: FormikHelpers<TFormValue>) => {
-      const userId = uuid.v4();
-      navigation.dispatch(StackActions.push(ERootStack.LoadingModal));
-      const checkUserExist = await firestore()
-        .collection('users')
-        .where(
-          firestore.Filter.or(
-            firestore.Filter('email', '==', value.email),
-            firestore.Filter('username', '==', value.username),
-          ),
-        )
-        .get();
-      if (checkUserExist.docs.length > 0) {
-        navigation.dispatch(StackActions.pop());
-        showErrorToastMessage('Email or User name is already taken.');
-      } else {
-        firestore()
+    async (
+      value: TFormSignUpValue,
+      formikHelpers: FormikHelpers<TFormSignUpValue>,
+    ) => {
+      try {
+        const userId = uuid.v4();
+        navigation.dispatch(StackActions.push(ERootStack.LoadingModal));
+        const checkUserExist = await firestore()
           .collection('users')
-          .doc(userId + '')
-          .set(value)
-          .then(() => {
-            navigation.dispatch(StackActions.pop());
-            formikHelpers.resetForm();
-            showSuccessToastMessage('Account successfully created!');
-          })
-          .catch(() => {
-            navigation.dispatch(StackActions.pop());
-            showErrorToastMessage('Account creation failed!');
-          });
+          .where(
+            firestore.Filter.or(
+              firestore.Filter('email', '==', value.email),
+              firestore.Filter('username', '==', value.username),
+            ),
+          )
+          .get();
+        if (checkUserExist.docs.length > 0) {
+          navigation.dispatch(StackActions.pop());
+          showErrorToastMessage('Email or User name is already taken.');
+        } else {
+          firestore()
+            .collection('users')
+            .doc(userId + '')
+            .set({id: userId, ...value})
+            .then(() => {
+              navigation.dispatch(StackActions.pop());
+              formikHelpers.resetForm();
+              showSuccessToastMessage('Account successfully created!');
+              navigation.dispatch(CommonActions.navigate(ERootStack.Login));
+            })
+            .catch(() => {
+              navigation.dispatch(StackActions.pop());
+              showErrorToastMessage('Account creation failed!');
+            });
+        }
+      } catch (error) {
+        console.log('SignUp error:', error);
       }
     },
     [navigation],
@@ -179,9 +183,9 @@ const SignUp = () => {
             errors,
           }) => {
             const isFillAll =
-              !!values.email ||
-              !!values.fullName ||
-              !!values.password ||
+              !!values.email &&
+              !!values.fullName &&
+              !!values.password &&
               !!values.username;
             return (
               <>

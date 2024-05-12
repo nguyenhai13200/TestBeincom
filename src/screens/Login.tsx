@@ -30,10 +30,43 @@ import {
 import {StackNavigationProp} from '@react-navigation/stack';
 import {RootStackParams} from 'src/navigation/params';
 import {ERootStack} from 'src/enums/navigation';
+import {Formik, FormikHelpers} from 'formik';
+import * as Yup from 'yup';
+import {validateEmail} from 'src/helpers/validateEmail';
+import firestore from '@react-native-firebase/firestore';
+import {
+  showErrorToastMessage,
+  showSuccessToastMessage,
+} from 'src/utils/toastMessage';
+import {useDispatch} from 'react-redux';
+import {setAuth} from 'src/redux/reducers/authSlice';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import {EStorageState} from 'src/enums/storage';
+
 const AnimatedImage = Animated.createAnimatedComponent(Image);
+
+type TFormLoginValue = {
+  email: string;
+  password: string;
+};
+
+const initialValues = {
+  email: '',
+  password: '',
+};
+
+const getValidateSchema = () => {
+  return Yup.object().shape({
+    email: Yup.string()
+      .required('Email is required!')
+      .test('is-valid-email', 'Invalid email', value => validateEmail(value)),
+    password: Yup.string().required('Password is required!'),
+  });
+};
 
 const Login = () => {
   const navigation = useNavigation<StackNavigationProp<RootStackParams>>();
+  const dispatch = useDispatch();
   const {top} = useSafeAreaInsets();
   const {height} = useWindowDimensions();
   const offset = useSharedValue<number>(0);
@@ -63,9 +96,40 @@ const Login = () => {
     logoLayoutX.value = nativeEvent.layout.x;
   };
 
-  const handleLogin = useCallback(() => {
-    navigation.dispatch(StackActions.push(ERootStack.LoadingModal));
-  }, [navigation]);
+  const handleLogin = useCallback(
+    async (
+      value: TFormLoginValue,
+      formikHelpers: FormikHelpers<TFormLoginValue>,
+    ) => {
+      try {
+        navigation.dispatch(StackActions.push(ERootStack.LoadingModal));
+        const checkUserExist = await firestore()
+          .collection('users')
+          .where('email', '==', value.email)
+          .where('password', '==', value.password)
+          .get();
+        if (checkUserExist.docs.length > 0) {
+          const {id, email, username, fullName, password} =
+            checkUserExist.docs[0].data();
+          dispatch(setAuth({id, email, username, fullName}));
+          await AsyncStorage.setItem(
+            EStorageState.Auth,
+            JSON.stringify({email, password}),
+          );
+          navigation.dispatch(StackActions.pop());
+          showSuccessToastMessage('Login success');
+          formikHelpers.resetForm();
+          navigation.dispatch(StackActions.replace(ERootStack.Main));
+        } else {
+          navigation.dispatch(StackActions.pop());
+          showErrorToastMessage('Error');
+        }
+      } catch (error) {
+        console.log('Login error:', error);
+      }
+    },
+    [dispatch, navigation],
+  );
 
   return (
     <KeyboardAwareScrollView
@@ -82,29 +146,65 @@ const Login = () => {
           />
         </View>
         <Text style={styles.title}>Welcome back!</Text>
+        <Formik
+          initialValues={initialValues}
+          validationSchema={getValidateSchema}
+          onSubmit={handleLogin}>
+          {({submitCount, setFieldValue, handleSubmit, values, errors}) => {
+            const isFillAll = !!values.email && !!values.password;
+            return (
+              <>
+                <TextInputTitleAbove
+                  type="input"
+                  containerStyle={styles.containerTextInput}
+                  style={styles.textInput}
+                  title="Email"
+                  placeholder="Your email"
+                  value={values.email}
+                  onChangeText={text => setFieldValue('email', text, true)}
+                  error={submitCount ? errors.email : ''}
+                />
+                <TextInputTitleAbove
+                  type="password"
+                  style={styles.textInput}
+                  containerStyle={styles.containerTextInput}
+                  title="Password"
+                  placeholder="Your password"
+                  value={values.password}
+                  onChangeText={text => setFieldValue('password', text, true)}
+                  error={submitCount ? errors.password : ''}
+                />
 
-        <TextInputTitleAbove
-          type="input"
-          containerStyle={styles.containerTextInput}
-          style={styles.textInput}
-          title="Email"
-          placeholder="Your email"
-        />
-        <TextInputTitleAbove
-          type="password"
-          style={styles.textInput}
-          containerStyle={styles.containerTextInput}
-          title="Password"
-          placeholder="Your password"
-        />
-        <View style={styles.btnForgotPass}>
-          <TouchableOpacity>
-            <Text style={styles.textForgotPass}>Forgot password?</Text>
-          </TouchableOpacity>
-        </View>
-        <TouchableOpacity style={styles.btnLogin} onPress={handleLogin}>
-          <Text style={styles.textBtnLogin}>Log In</Text>
-        </TouchableOpacity>
+                <View style={styles.btnForgotPass}>
+                  <TouchableOpacity>
+                    <Text style={styles.textForgotPass}>Forgot password?</Text>
+                  </TouchableOpacity>
+                </View>
+                <TouchableOpacity
+                  disabled={!isFillAll}
+                  style={[
+                    styles.btnLogin,
+                    {
+                      backgroundColor: isFillAll
+                        ? EColor.primary
+                        : EColor.color_F4F4FF,
+                    },
+                  ]}
+                  onPress={() => {
+                    handleSubmit();
+                  }}>
+                  <Text
+                    style={[
+                      styles.textBtnLogin,
+                      {color: isFillAll ? EColor.white : EColor.color_666666},
+                    ]}>
+                    Log In
+                  </Text>
+                </TouchableOpacity>
+              </>
+            );
+          }}
+        </Formik>
         <View style={styles.boxTextSignUp}>
           <Text style={styles.textSignUp}>Don't have an account? </Text>
           <TouchableOpacity

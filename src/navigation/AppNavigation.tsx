@@ -14,7 +14,7 @@ const AppNavigation = () => {
   return (
     <Stack.Navigator
       screenOptions={{headerShown: false}}
-      initialRouteName={ERootStack.SignUp}>
+      initialRouteName={ERootStack.Splash}>
       <Stack.Screen name={ERootStack.Main} component={BottomTabNavigation} />
       <Stack.Screen name={ERootStack.Splash} component={Splash} />
       <Stack.Screen name={ERootStack.Login} component={Login} />
