@@ -39,10 +39,16 @@ import {
   showSuccessToastMessage,
 } from 'src/utils/toastMessage';
 import {useDispatch} from 'react-redux';
-import {setAuth} from 'src/redux/reducers/authSlice';
+import {EProviderId, setAuth} from 'src/redux/reducers/authSlice';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import {EStorageState} from 'src/enums/storage';
-import {LoginManager, Profile} from 'react-native-fbsdk-next';
+import {AccessToken, LoginManager, Profile} from 'react-native-fbsdk-next';
+import {
+  GoogleSignin,
+  statusCodes,
+} from '@react-native-google-signin/google-signin';
+import auth from '@react-native-firebase/auth';
+import {convertStringToUsername} from 'src/helpers/convertString';
 
 const AnimatedImage = Animated.createAnimatedComponent(Image);
 
@@ -112,7 +118,16 @@ const Login = () => {
         if (checkUserExist.docs.length > 0) {
           const {id, email, username, fullName, password} =
             checkUserExist.docs[0].data();
-          dispatch(setAuth({id, email, username, fullName}));
+          dispatch(
+            setAuth({
+              id,
+              email,
+              username,
+              fullName,
+              avatar: '',
+              providerId: EProviderId.Email,
+            }),
+          );
           await AsyncStorage.setItem(
             EStorageState.Auth,
             JSON.stringify({email, password}),
@@ -135,40 +150,130 @@ const Login = () => {
   const handleLoginFacebook = async () => {
     // Attempt login with permissions
     try {
-      LoginManager.setLoginBehavior('native_only');
-      const resultNative = await LoginManager.logInWithPermissions([
+      navigation.dispatch(StackActions.push(ERootStack.LoadingModal));
+      LoginManager.logOut();
+      LoginManager.setLoginBehavior('web_only');
+      const result = await LoginManager.logInWithPermissions([
         'public_profile',
         'email',
       ]);
-      if (resultNative.isCancelled) {
-        showSuccessToastMessage('You cancelled login with Facebook');
+      if (result.isCancelled) {
+        navigation.dispatch(StackActions.pop());
+        return showErrorToastMessage('You cancelled login with Facebook');
+      }
+      // Once signed in, get the users AccesToken
+      const data = await AccessToken.getCurrentAccessToken();
+
+      if (!data) {
+        throw 'Something went wrong obtaining access token';
+      }
+
+      const user = await Profile.getCurrentProfile();
+      if (user) {
+        const {
+          userID: id,
+          email,
+          name: fullName,
+          imageURL: avatar,
+        } = user as any;
+
+        dispatch(
+          setAuth({
+            id,
+            email,
+            username: convertStringToUsername(fullName),
+            fullName,
+            avatar,
+            providerId: EProviderId.Facebook,
+          }),
+        );
+        await firestore()
+          .collection('users')
+          .doc(id)
+          .set({
+            id,
+            email,
+            username: convertStringToUsername(fullName),
+            fullName,
+            avatar,
+            providerId: EProviderId.Facebook,
+          });
+        await AsyncStorage.setItem(
+          EStorageState.Auth,
+          JSON.stringify({
+            email,
+            password: '',
+            providerId: EProviderId.Facebook,
+          }),
+        );
+        navigation.dispatch(
+          CommonActions.reset({index: 0, routes: [{name: ERootStack.Main}]}),
+        );
       }
     } catch (nativeError) {
       console.log('Login FB native error:', nativeError);
-      try {
-        LoginManager.setLoginBehavior('web_only');
-        const resultWeb = await LoginManager.logInWithPermissions([
-          'public_profile',
-          'email',
-        ]);
-        if (resultWeb.isCancelled) {
-          showSuccessToastMessage('You cancelled login with Facebook');
-        }
-      } catch (webError) {
-        console.log('Login FB web error:', webError);
+    }
+  };
+
+  const handleLoginGoogle = async () => {
+    try {
+      navigation.dispatch(StackActions.push(ERootStack.LoadingModal));
+      GoogleSignin.signOut();
+      // Check if your device supports Google Play
+      await GoogleSignin.hasPlayServices({showPlayServicesUpdateDialog: true});
+      // Get the users ID token
+      const {idToken} = await GoogleSignin.signIn();
+
+      // Create a Google credential with the token
+      const googleCredential = auth.GoogleAuthProvider.credential(idToken);
+
+      // Sign-in the user with the credential
+      const userGoogle = await auth().signInWithCredential(googleCredential);
+      if (userGoogle) {
+        const {
+          sub: id,
+          email,
+          name: fullName,
+          picture: avatar,
+        } = userGoogle.additionalUserInfo?.profile as any;
+        dispatch(
+          setAuth({
+            id,
+            email,
+            username: convertStringToUsername(fullName),
+            fullName,
+            avatar,
+            providerId: EProviderId.Google,
+          }),
+        );
+        await firestore()
+          .collection('users')
+          .doc(id)
+          .set({
+            id,
+            email,
+            username: convertStringToUsername(fullName),
+            fullName,
+            avatar,
+            providerId: EProviderId.Google,
+          });
+        await AsyncStorage.setItem(
+          EStorageState.Auth,
+          JSON.stringify({
+            email,
+            password: '',
+            providerId: EProviderId.Google,
+          }),
+        );
+        navigation.dispatch(
+          CommonActions.reset({index: 0, routes: [{name: ERootStack.Main}]}),
+        );
+      }
+    } catch (error: any) {
+      if (error.code === statusCodes.SIGN_IN_CANCELLED) {
+        navigation.dispatch(StackActions.pop());
       }
     }
-
-    // // Once signed in, get the users AccesToken
-    // const data = await AccessToken.getCurrentAccessToken();
-
-    // if (!data) {
-    //   throw 'Something went wrong obtaining access token';
-    // }
-
-    Profile.getCurrentProfile().then(function (currentProfile) {
-      console.log(currentProfile);
-    });
   };
 
   return (
@@ -263,15 +368,15 @@ const Login = () => {
         </View>
 
         <View style={styles.boxBtnOther}>
-          <TouchableOpacity style={styles.mr10}>
-            <ButtonIconLoginOther
-              icon={<IconFacebook />}
-              onPress={handleLoginFacebook}
-            />
-          </TouchableOpacity>
-          <TouchableOpacity>
-            <ButtonIconLoginOther icon={<IconGoogle />} />
-          </TouchableOpacity>
+          <ButtonIconLoginOther
+            style={styles.mr10}
+            icon={<IconFacebook />}
+            onPress={handleLoginFacebook}
+          />
+          <ButtonIconLoginOther
+            icon={<IconGoogle />}
+            onPress={handleLoginGoogle}
+          />
         </View>
 
         <View style={styles.boxTextPolicy}>

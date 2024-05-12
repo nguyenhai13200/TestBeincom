@@ -46,6 +46,7 @@ import {
   showErrorToastMessage,
   showSuccessToastMessage,
 } from 'src/utils/toastMessage';
+import {EProviderId} from 'src/redux/reducers/authSlice';
 
 const AnimatedImage = Animated.createAnimatedComponent(Image);
 
@@ -136,7 +137,7 @@ const SignUp = () => {
           firestore()
             .collection('users')
             .doc(userId + '')
-            .set({id: userId, ...value})
+            .set({id: userId, providerId: EProviderId.Email, ...value})
             .then(() => {
               navigation.dispatch(StackActions.pop());
               formikHelpers.resetForm();

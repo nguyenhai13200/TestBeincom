@@ -1,4 +1,4 @@
-import {View, Text, StyleSheet, TouchableOpacity} from 'react-native';
+import {View, Text, StyleSheet, TouchableOpacity, Image} from 'react-native';
 import React from 'react';
 import {EColor} from 'src/enums/colors';
 import {rh, rw} from 'src/helpers/responsive';
@@ -11,6 +11,8 @@ import {ERootStack} from 'src/enums/navigation';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import {RootReduxState} from 'src/redux/store';
 import {useSafeAreaInsets} from 'react-native-safe-area-context';
+import {LoginManager} from 'react-native-fbsdk-next';
+import {GoogleSignin} from '@react-native-google-signin/google-signin';
 
 const Menu = () => {
   const {top} = useSafeAreaInsets();
@@ -18,6 +20,8 @@ const Menu = () => {
   const user = useSelector((state: RootReduxState) => state.auth);
   const navigation = useNavigation<StackNavigationProp<RootStackParams>>();
   const handleLogOut = async () => {
+    GoogleSignin.signOut();
+    LoginManager.logOut();
     dispatch(resetAuth());
     await AsyncStorage.clear();
     navigation.dispatch(
@@ -28,9 +32,13 @@ const Menu = () => {
     <View style={styles.container}>
       <View style={[styles.header]}>
         <View style={[styles.boxInfo, {paddingTop: top, height: top + rh(50)}]}>
-          <View style={styles.avatar}>
-            <Text style={styles.textAvatar}>{user.fullName[0]}</Text>
-          </View>
+          {user.avatar ? (
+            <Image source={{uri: user.avatar}} style={styles.avatar} />
+          ) : (
+            <View style={styles.avatar}>
+              <Text style={styles.textAvatar}>{user.fullName[0]}</Text>
+            </View>
+          )}
           <Text style={styles.textFullName}>{user.fullName}</Text>
         </View>
         <View style={styles.boxUsername}>

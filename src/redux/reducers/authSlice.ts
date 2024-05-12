@@ -1,18 +1,27 @@
 import {createSlice} from '@reduxjs/toolkit';
 import type {PayloadAction} from '@reduxjs/toolkit';
 
+export enum EProviderId {
+  Email = 'email',
+  Facebook = 'facebook',
+  Google = 'google',
+}
 export interface AuthState {
-  id: number;
+  id: string;
   fullName: string;
   username: string;
   email: string;
+  avatar: string;
+  providerId: EProviderId;
 }
 
 const initialState: AuthState = {
-  id: 0,
+  id: '',
   fullName: '',
   username: '',
   email: '',
+  avatar: '',
+  providerId: EProviderId.Email,
 };
 
 export const authSlice = createSlice({

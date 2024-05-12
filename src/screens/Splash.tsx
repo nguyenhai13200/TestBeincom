@@ -10,7 +10,10 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import {EStorageState} from 'src/enums/storage';
 import firestore from '@react-native-firebase/firestore';
 import {useDispatch} from 'react-redux';
-import {setAuth} from 'src/redux/reducers/authSlice';
+import {EProviderId, setAuth} from 'src/redux/reducers/authSlice';
+import {convertStringToUsername} from 'src/helpers/convertString';
+import {Profile} from 'react-native-fbsdk-next';
+import {GoogleSignin} from '@react-native-google-signin/google-signin';
 
 const Splash = () => {
   const navigation = useNavigation<StackNavigationProp<RootStackParams>>();
@@ -20,30 +23,111 @@ const Splash = () => {
     const auth = await AsyncStorage.getItem(EStorageState.Auth);
     if (auth) {
       try {
-        const {email: emailStorage, password: passwordStorage} =
-          JSON.parse(auth);
+        const {
+          email: emailStorage,
+          password: passwordStorage,
+          providerId: providerIdStorage,
+        } = JSON.parse(auth);
 
-        const checkUserExist = await firestore()
-          .collection('users')
-          .where('email', '==', emailStorage)
-          .where('password', '==', passwordStorage)
-          .get();
+        if (providerIdStorage === EProviderId.Email) {
+          const checkUserExist = await firestore()
+            .collection('users')
+            .where('email', '==', emailStorage)
+            .where('password', '==', passwordStorage)
+            .get();
+          if (checkUserExist.docs.length > 0) {
+            const {id, email, username, fullName, avatar, providerId} =
+              checkUserExist.docs[0].data();
 
-        if (checkUserExist.docs.length > 0) {
-          const {id, email, username, fullName} = checkUserExist.docs[0].data();
+            dispatch(
+              setAuth({id, email, username, fullName, avatar, providerId}),
+            );
 
-          dispatch(setAuth({id, email, username, fullName}));
+            navigation.dispatch(
+              CommonActions.reset({
+                index: 0,
+                routes: [{name: ERootStack.Main}],
+              }),
+            );
+          } else {
+            navigation.dispatch(
+              CommonActions.reset({
+                index: 0,
+                routes: [{name: ERootStack.Login}],
+              }),
+            );
+          }
+        } else if (providerIdStorage === EProviderId.Facebook) {
+          const user = await Profile.getCurrentProfile();
+          if (user) {
+            const {
+              userID: id,
+              email,
+              name: fullName,
+              imageURL: avatar,
+            } = user as any;
 
-          navigation.dispatch(
-            CommonActions.reset({
-              index: 0,
-              routes: [{name: ERootStack.Main}],
-            }),
-          );
+            dispatch(
+              setAuth({
+                id,
+                email,
+                username: convertStringToUsername(fullName),
+                fullName,
+                avatar,
+                providerId: EProviderId.Facebook,
+              }),
+            );
+            setTimeout(() => {
+              navigation.dispatch(
+                CommonActions.reset({
+                  index: 0,
+                  routes: [{name: ERootStack.Main}],
+                }),
+              );
+            }, 500);
+          } else {
+            navigation.dispatch(
+              CommonActions.reset({
+                index: 0,
+                routes: [{name: ERootStack.Login}],
+              }),
+            );
+          }
         } else {
-          navigation.dispatch(
-            CommonActions.reset({index: 0, routes: [{name: ERootStack.Login}]}),
-          );
+          const resUserGoogle = await GoogleSignin.getCurrentUser();
+          if (resUserGoogle) {
+            const {
+              id,
+              email,
+              name: fullName,
+              photo: avatar,
+            } = resUserGoogle.user as any;
+            dispatch(
+              setAuth({
+                id,
+                email,
+                username: convertStringToUsername(fullName),
+                fullName,
+                avatar,
+                providerId: EProviderId.Google,
+              }),
+            );
+            setTimeout(() => {
+              navigation.dispatch(
+                CommonActions.reset({
+                  index: 0,
+                  routes: [{name: ERootStack.Main}],
+                }),
+              );
+            }, 500);
+          } else {
+            navigation.dispatch(
+              CommonActions.reset({
+                index: 0,
+                routes: [{name: ERootStack.Login}],
+              }),
+            );
+          }
         }
       } catch (error) {
         console.log('Login error:', error);
@@ -54,7 +138,7 @@ const Splash = () => {
         navigation.dispatch(
           CommonActions.reset({index: 0, routes: [{name: ERootStack.Login}]}),
         );
-      }, 1000);
+      }, 500);
     }
   };
   useEffect(() => {

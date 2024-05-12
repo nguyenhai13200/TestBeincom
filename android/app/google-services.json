@@ -12,7 +12,20 @@
           "package_name": "com.testbeincom"
         }
       },
-      "oauth_client": [],
+      "oauth_client": [
+        {
+          "client_id": "764760717435-b3rtarhkujc1326a9q419nvljcdn7ecv.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.testbeincom",
+            "certificate_hash": "28253ee95928a942e9bc8b079deb5ea8b01e3f2f"
+          }
+        },
+        {
+          "client_id": "764760717435-hj3l635970gdonggbsgj8vqm7ifblmmh.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
       "api_key": [
         {
           "current_key": "AIzaSyBM4l_y_X46WMRVrwU4ioKajZ5Y89-t5VQ"
@@ -20,7 +33,19 @@
       ],
       "services": {
         "appinvite_service": {
-          "other_platform_oauth_client": []
+          "other_platform_oauth_client": [
+            {
+              "client_id": "764760717435-hj3l635970gdonggbsgj8vqm7ifblmmh.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "764760717435-cc8pk6rav7nv0l4nj785hsu3rm475293.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.abong.testbeincom"
+              }
+            }
+          ]
         }
       }
     }
