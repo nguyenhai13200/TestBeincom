@@ -42,6 +42,7 @@ import {useDispatch} from 'react-redux';
 import {setAuth} from 'src/redux/reducers/authSlice';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import {EStorageState} from 'src/enums/storage';
+import {LoginManager, Profile} from 'react-native-fbsdk-next';
 
 const AnimatedImage = Animated.createAnimatedComponent(Image);
 
@@ -130,6 +131,45 @@ const Login = () => {
     },
     [dispatch, navigation],
   );
+
+  const handleLoginFacebook = async () => {
+    // Attempt login with permissions
+    try {
+      LoginManager.setLoginBehavior('native_only');
+      const resultNative = await LoginManager.logInWithPermissions([
+        'public_profile',
+        'email',
+      ]);
+      if (resultNative.isCancelled) {
+        showSuccessToastMessage('You cancelled login with Facebook');
+      }
+    } catch (nativeError) {
+      console.log('Login FB native error:', nativeError);
+      try {
+        LoginManager.setLoginBehavior('web_only');
+        const resultWeb = await LoginManager.logInWithPermissions([
+          'public_profile',
+          'email',
+        ]);
+        if (resultWeb.isCancelled) {
+          showSuccessToastMessage('You cancelled login with Facebook');
+        }
+      } catch (webError) {
+        console.log('Login FB web error:', webError);
+      }
+    }
+
+    // // Once signed in, get the users AccesToken
+    // const data = await AccessToken.getCurrentAccessToken();
+
+    // if (!data) {
+    //   throw 'Something went wrong obtaining access token';
+    // }
+
+    Profile.getCurrentProfile().then(function (currentProfile) {
+      console.log(currentProfile);
+    });
+  };
 
   return (
     <KeyboardAwareScrollView
@@ -223,8 +263,15 @@ const Login = () => {
         </View>
 
         <View style={styles.boxBtnOther}>
-          <ButtonIconLoginOther icon={<IconFacebook />} style={styles.mr10} />
-          <ButtonIconLoginOther icon={<IconGoogle />} />
+          <TouchableOpacity style={styles.mr10}>
+            <ButtonIconLoginOther
+              icon={<IconFacebook />}
+              onPress={handleLoginFacebook}
+            />
+          </TouchableOpacity>
+          <TouchableOpacity>
+            <ButtonIconLoginOther icon={<IconGoogle />} />
+          </TouchableOpacity>
         </View>
 
         <View style={styles.boxTextPolicy}>

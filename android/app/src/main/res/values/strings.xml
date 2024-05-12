@@ -1,3 +1,7 @@
 <resources>
     <string name="app_name">TestBeincom</string>
+
+    <string name="facebook_app_id">842000124425266</string>
+    <string name="fb_login_protocol_scheme">fb842000124425266</string>
+    <string name="facebook_client_token">130cc4456aed9d275c6cf7214d6bc6d0</string>
 </resources>

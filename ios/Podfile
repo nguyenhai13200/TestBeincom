@@ -26,6 +26,8 @@ if linkage != nil
 end
 
 target 'TestBeincom' do
+
+  pod 'FBSDKLoginKit'
   config = use_native_modules!
 
   use_frameworks! :linkage => :static
