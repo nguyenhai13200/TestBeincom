@@ -20,12 +20,17 @@ import {RootReduxState} from 'src/redux/store';
 import firestore from '@react-native-firebase/firestore';
 import {getTodos} from 'src/redux/reducers/todoSlice';
 import {groupData} from 'src/helpers/groupData';
+import ModalTodoDetail from 'src/components/ModalTodoDetail';
 
 const Todos = () => {
+  const [showModal, setShowModal] = useState(false);
+  const [showModalDetail, setShowModalDetail] = useState(false);
+
   const dispatch = useDispatch();
   const user = useSelector((state: RootReduxState) => state.auth);
-  const {listTodos} = useSelector((state: RootReduxState) => state.todos);
-  const [showModal, setShowModal] = useState(false);
+  const {listTodos, todoDetail} = useSelector(
+    (state: RootReduxState) => state.todos,
+  );
 
   const sections = useMemo(
     () =>
@@ -36,23 +41,17 @@ const Todos = () => {
     [listTodos],
   );
 
-  const getDataTodos = () => {
-    firestore()
-      .collection('todos')
-      .where('ownerId', '==', user.id)
-      .get()
-      .then(res => {
-        const cloneTodos: Todo[] = [];
-        res.docs.map(todo => {
-          cloneTodos.push({
-            ...todo.data(),
-            timeStart: todo.data().timeStart.toDate().toString(),
-            timeEnd: todo.data().timeEnd.toDate().toString(),
-          } as Todo);
-        });
-        dispatch(getTodos({listTodos: cloneTodos}));
-      });
-  };
+  const handleHideModal = useCallback(() => {
+    setShowModal(false);
+  }, []);
+
+  const handleShowModalDetail = useCallback(() => {
+    setShowModalDetail(true);
+  }, []);
+
+  const handleHideModalDetail = useCallback(() => {
+    setShowModalDetail(false);
+  }, []);
 
   const keyExtractor = useCallback(
     (_: Todo, index: number) => index.toString(),
@@ -60,7 +59,8 @@ const Todos = () => {
   );
 
   const renderItem = useCallback(({item}: {item: Todo}) => {
-    return <ItemTodo todo={item} />;
+    return <ItemTodo todo={item} onPress={handleShowModalDetail} />;
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const renderSectionHeader = useCallback(
@@ -89,9 +89,23 @@ const Todos = () => {
   }, []);
 
   useEffect(() => {
-    getDataTodos();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+    const subscriber = firestore()
+      .collection('todos')
+      .where('ownerId', '==', user.id)
+      // .orderBy('timeStart', 'desc')
+      .onSnapshot(res => {
+        const cloneTodos: Todo[] = [];
+        res.docs.map(todo => {
+          cloneTodos.push({
+            ...todo.data(),
+            timeStart: todo.data().timeStart.toDate().toString(),
+            timeEnd: todo.data().timeEnd.toDate().toString(),
+          } as Todo);
+        });
+        dispatch(getTodos({listTodos: cloneTodos, todoDetail}));
+      });
+    return () => subscriber();
+  }, [dispatch, todoDetail, user.id]);
 
   return (
     <View style={styles.container}>
@@ -110,7 +124,11 @@ const Todos = () => {
         onPress={() => setShowModal(true)}>
         <IconPlus color={EColor.white} height={rh(30)} width={rh(30)} />
       </TouchableOpacity>
-      <ModalAddTodo isVisible={showModal} onClose={() => setShowModal(false)} />
+      <ModalAddTodo isVisible={showModal} onClose={handleHideModal} />
+      <ModalTodoDetail
+        isVisible={showModalDetail}
+        onClose={handleHideModalDetail}
+      />
     </View>
   );
 };

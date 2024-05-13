@@ -1,14 +1,13 @@
 import {StyleSheet, Text, TouchableOpacity, View} from 'react-native';
-import React, {memo} from 'react';
+import React, {useState} from 'react';
 import Modal from 'react-native-modal';
 import {EColor} from 'src/enums/colors';
 import {rh, rw} from 'src/helpers/responsive';
 import InputAddTodo from './InputAddTodo';
 import ButtonPickDateTime from './ButtonPickDateTime';
 import IconClose from 'src/media/icons/IconClose';
-import {Formik, FormikHelpers} from 'formik';
+import {Formik} from 'formik';
 import firestore from '@react-native-firebase/firestore';
-import uuid from 'react-native-uuid';
 import {
   showSuccessToastMessage,
   showErrorToastMessage,
@@ -16,61 +15,39 @@ import {
 import moment from 'moment';
 import {useSelector} from 'react-redux';
 import {RootReduxState} from 'src/redux/store';
+import IconEdit from 'src/media/icons/IconEdit';
+import IconRemove from 'src/media/icons/IconRemove';
+import {Todo} from './ItemTodo';
+import DropdownStatus from './DropdownStatus';
+import {ETodoStatus} from './ModalAddTodo';
 import {KeyboardAwareScrollView} from 'react-native-keyboard-aware-scroll-view';
 import {useSafeAreaInsets} from 'react-native-safe-area-context';
-
-export enum ETodoStatus {
-  OPEN = 'OPEN',
-  IN_PROGRESS = 'IN_PROGRESS',
-  CANCELED = 'CANCELED',
-  DONE = 'DONE',
-}
 
 type Props = {
   isVisible: boolean;
   onClose: () => void;
 };
-export type TFormTodoValue = {
-  title: string;
-  description: string;
-  status?: ETodoStatus;
-  ownerId?: string;
-  timeStart: string;
-  timeEnd: string;
-  date?: string;
-};
 
-const initialValues: TFormTodoValue = {
-  title: '',
-  description: '',
-  status: ETodoStatus.OPEN,
-  timeStart: moment().format(),
-  timeEnd: moment().format(),
-  date: moment().format(),
-};
-const ModalAddTodo = (props: Props) => {
+const ModalTodoDetail = (props: Props) => {
+  const [isEdit, setIsEdit] = useState(false);
+  const [isRemove, setIsRemove] = useState(false);
   const {top} = useSafeAreaInsets();
-  const user = useSelector((state: RootReduxState) => state.auth);
 
-  const handleAddTodo = (
-    value: TFormTodoValue,
-    formikHelpers: FormikHelpers<TFormTodoValue>,
-  ) => {
-    const todoId = uuid.v4().toString();
+  const {todoDetail} = useSelector((state: RootReduxState) => state.todos);
+
+  const onSubmit = (value: Todo) => {
     firestore()
       .collection('todos')
-      .doc(todoId)
-      .set({
+      .doc(todoDetail.id)
+      .update({
         ...value,
-        id: todoId,
-        ownerId: user.id,
         timeStart: firestore.Timestamp.fromDate(
           new Date(
             `${moment(value.date)
               .format('DD/MM/YYYY')!
               .split('/')
               .reverse()
-              .join('-')}T${moment(value.timeStart).format('HH:mm')}`,
+              .join('-')}T${moment(new Date(value.timeStart)).format('HH:mm')}`,
           ),
         ),
         timeEnd: firestore.Timestamp.fromDate(
@@ -79,16 +56,47 @@ const ModalAddTodo = (props: Props) => {
               .format('DD/MM/YYYY')!
               .split('/')
               .reverse()
-              .join('-')}T${moment(value.timeEnd).format('HH:mm')}`,
+              .join('-')}T${moment(new Date(value.timeEnd)).format('HH:mm')}`,
           ),
         ),
       })
       .then(() => {
-        formikHelpers.resetForm();
-        showSuccessToastMessage('Todo successfully created!');
+        setIsEdit(false);
+        showSuccessToastMessage('Edit todo successfully!');
       })
       .catch(() => {
-        showErrorToastMessage('Todo creation failed!');
+        showErrorToastMessage('Edit todo failed!');
+      });
+  };
+
+  const handleRemove = () => {
+    firestore()
+      .collection('todos')
+      .doc(todoDetail.id)
+      .delete()
+      .then(() => {
+        setIsRemove(false);
+        props.onClose();
+        showSuccessToastMessage('Todo deleted!');
+      })
+      .catch(() => {
+        showErrorToastMessage('Delete todo error!');
+      });
+  };
+
+  const handleChangeStatus = (status: ETodoStatus) => {
+    firestore()
+      .collection('todos')
+      .doc(todoDetail.id)
+      .update({
+        status,
+      })
+      .then(() => {
+        setIsEdit(false);
+        showSuccessToastMessage('Change status todo successfully!');
+      })
+      .catch(() => {
+        showErrorToastMessage('Change status todo failed!');
       });
   };
   return (
@@ -101,17 +109,33 @@ const ModalAddTodo = (props: Props) => {
         showsVerticalScrollIndicator={false}
         contentContainerStyle={[styles.flexGrow, {marginTop: top + rh(50)}]}>
         <View style={styles.container}>
-          <Formik initialValues={initialValues} onSubmit={handleAddTodo}>
-            {({setFieldValue, handleSubmit, values}) => {
+          <Formik initialValues={todoDetail} onSubmit={onSubmit}>
+            {({setFieldValue, handleSubmit, values, resetForm}) => {
               return (
                 <>
                   <View style={styles.boxBtnClose}>
+                    <View style={styles.boxEdit}>
+                      <TouchableOpacity
+                        style={styles.mR10}
+                        onPress={() => setIsEdit(true)}>
+                        <IconEdit width={rh(21)} height={rh(21)} />
+                      </TouchableOpacity>
+                      <TouchableOpacity onPress={() => setIsRemove(true)}>
+                        <IconRemove
+                          width={rh(21)}
+                          height={rh(21)}
+                          color={EColor.color_FF0B0B}
+                        />
+                      </TouchableOpacity>
+                    </View>
                     <TouchableOpacity onPress={props.onClose}>
                       <IconClose />
                     </TouchableOpacity>
                   </View>
-                  <Text style={styles.title}>Add Todo</Text>
+                  <Text style={styles.title}>Todo Detail</Text>
+                  <DropdownStatus onPress={handleChangeStatus} />
                   <InputAddTodo
+                    editable={isEdit}
                     value={values.title}
                     title="Title todo:"
                     placeholder="Enter title todo..."
@@ -119,6 +143,7 @@ const ModalAddTodo = (props: Props) => {
                     onChangeText={text => setFieldValue('title', text)}
                   />
                   <InputAddTodo
+                    editable={isEdit}
                     value={values.description}
                     title="Description todo:"
                     placeholder="Enter description todo..."
@@ -128,6 +153,8 @@ const ModalAddTodo = (props: Props) => {
                   <View style={[styles.boxTime, {marginTop: rh(30)}]}>
                     <Text style={styles.textTime}>Date:</Text>
                     <ButtonPickDateTime
+                      value={new Date(values.date!)}
+                      disabled
                       mode="date"
                       color={EColor.color_43A3FF}
                       onChangeDate={date => setFieldValue('date', date)}
@@ -136,6 +163,8 @@ const ModalAddTodo = (props: Props) => {
                   <View style={styles.boxTime}>
                     <Text style={styles.textTime}>Time start:</Text>
                     <ButtonPickDateTime
+                      value={new Date(values.timeStart)}
+                      disabled
                       mode="time"
                       color={EColor.color_43A3FF}
                       onChangeDate={date => setFieldValue('timeStart', date)}
@@ -144,44 +173,53 @@ const ModalAddTodo = (props: Props) => {
                   <View style={styles.boxTime}>
                     <Text style={styles.textTime}>Time end:</Text>
                     <ButtonPickDateTime
+                      value={new Date(values.timeEnd)}
+                      disabled
                       mode="time"
                       color={EColor.color_FF0B0B}
                       onChangeDate={date => setFieldValue('timeEnd', date)}
                     />
                   </View>
-                  <View style={styles.boxBtn}>
-                    <TouchableOpacity
-                      onPress={props.onClose}
-                      style={[
-                        styles.btn,
-                        {backgroundColor: EColor.color_FF0B0B},
-                      ]}>
-                      <Text style={styles.textBtn}>Cancel</Text>
-                    </TouchableOpacity>
-                    <TouchableOpacity
-                      disabled={!values.title}
-                      style={[
-                        styles.btn,
-                        {
-                          backgroundColor: values.title
-                            ? EColor.primary
-                            : EColor.color_F4F4FF,
-                        },
-                      ]}
-                      onPress={() => handleSubmit()}>
-                      <Text
+
+                  {isEdit && (
+                    <View style={styles.boxBtn}>
+                      <TouchableOpacity
+                        onPress={() => {
+                          resetForm();
+                          setIsEdit(false);
+                        }}
                         style={[
-                          styles.textBtn,
-                          {
-                            color: values.title
-                              ? EColor.white
-                              : EColor.color_666666,
-                          },
+                          styles.btn,
+                          {backgroundColor: EColor.color_FF0B0B},
                         ]}>
-                        Add
-                      </Text>
-                    </TouchableOpacity>
-                  </View>
+                        <Text style={styles.textBtn}>Cancel</Text>
+                      </TouchableOpacity>
+                      <TouchableOpacity
+                        disabled={!values.title}
+                        style={styles.btn}
+                        onPress={() => handleSubmit()}>
+                        <Text style={styles.textBtn}>Edit</Text>
+                      </TouchableOpacity>
+                    </View>
+                  )}
+                  {isRemove && (
+                    <View style={styles.boxBtn}>
+                      <TouchableOpacity
+                        onPress={() => setIsRemove(false)}
+                        style={[
+                          styles.btn,
+                          {backgroundColor: EColor.color_FF0B0B},
+                        ]}>
+                        <Text style={styles.textBtn}>Cancel</Text>
+                      </TouchableOpacity>
+                      <TouchableOpacity
+                        disabled={!values.title}
+                        style={styles.btn}
+                        onPress={handleRemove}>
+                        <Text style={styles.textBtn}>Remove</Text>
+                      </TouchableOpacity>
+                    </View>
+                  )}
                 </>
               );
             }}
@@ -192,13 +230,17 @@ const ModalAddTodo = (props: Props) => {
   );
 };
 
-export default memo(ModalAddTodo);
+export default ModalTodoDetail;
 
 const styles = StyleSheet.create({
   flexGrow: {flexGrow: 1},
+  boxEdit: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
   boxBtnClose: {
     flexDirection: 'row',
-    justifyContent: 'flex-end',
+    justifyContent: 'space-between',
   },
   modal: {
     padding: 0,
@@ -247,5 +289,8 @@ const styles = StyleSheet.create({
     color: EColor.white,
     fontSize: rh(16),
     fontWeight: 'bold',
+  },
+  mR10: {
+    marginRight: rw(10),
   },
 });

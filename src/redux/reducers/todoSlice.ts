@@ -1,13 +1,24 @@
 import {createSlice} from '@reduxjs/toolkit';
 import type {PayloadAction} from '@reduxjs/toolkit';
 import {Todo} from 'src/components/ItemTodo';
+import {ETodoStatus} from 'src/components/ModalAddTodo';
 
 export interface TodoState {
   listTodos: Todo[];
+  todoDetail: Todo;
 }
 
 const initialState: TodoState = {
   listTodos: [],
+  todoDetail: {
+    id: '',
+    title: '',
+    description: '',
+    ownerId: '',
+    status: ETodoStatus.OPEN,
+    timeStart: '',
+    timeEnd: '',
+  },
 };
 
 export const todoSlice = createSlice({
@@ -26,10 +37,23 @@ export const todoSlice = createSlice({
     resetTodos: (state: TodoState) => {
       Object.assign(state, initialState);
     },
+    setTodoDetail: (state: TodoState, action: PayloadAction<Todo>) => {
+      state.todoDetail = action.payload;
+    },
+    resetTodoDetail: (state: TodoState) => {
+      state.todoDetail = initialState.todoDetail;
+    },
   },
 });
 
 // Action creators are generated for each case reducer function
-export const {getTodos, addTodo, removeTodo, resetTodos} = todoSlice.actions;
+export const {
+  getTodos,
+  addTodo,
+  removeTodo,
+  resetTodos,
+  setTodoDetail,
+  resetTodoDetail,
+} = todoSlice.actions;
 
 export default todoSlice.reducer;

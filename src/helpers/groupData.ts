@@ -2,7 +2,7 @@ import moment from 'moment';
 
 export const groupData = (data: Array<any>) => {
   return data.reduce((acc, todo) => {
-    const date = moment(todo.timeStart).format('DD-MM-YYYY');
+    const date = moment(new Date(todo.timeStart)).format('DD-MM-YYYY');
     if (!acc[date]) {
       acc[date] = [];
     }

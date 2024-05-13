@@ -1,5 +1,5 @@
 import {StyleSheet, Text, TouchableOpacity, View} from 'react-native';
-import React, {memo} from 'react';
+import React, {memo, useCallback} from 'react';
 import {EColor} from 'src/enums/colors';
 import {rh, rw} from 'src/helpers/responsive';
 import IconProgress from 'src/media/icons/IconProgress';
@@ -10,6 +10,8 @@ import {getColorStatus} from 'src/helpers/getColorStatus';
 import IconDone from 'src/media/icons/IconDone';
 import IconOpen from 'src/media/icons/IconOpen';
 import IconCancel from 'src/media/icons/IconCancel';
+import {useDispatch} from 'react-redux';
+import {setTodoDetail} from 'src/redux/reducers/todoSlice';
 
 export interface Todo extends TFormTodoValue {
   id: string;
@@ -21,8 +23,16 @@ type Props = {
 };
 
 const ItemTodo = (props: Props) => {
+  const dispatch = useDispatch();
+
+  const handlePress = useCallback(() => {
+    props.onPress && props.onPress();
+    dispatch(setTodoDetail(props.todo));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [props]);
+
   return (
-    <TouchableOpacity style={styles.container} onPress={props.onPress}>
+    <TouchableOpacity style={styles.container} onPress={handlePress}>
       <Text numberOfLines={2} style={styles.title}>
         {props.todo.title}
       </Text>
@@ -79,7 +89,9 @@ const ItemTodo = (props: Props) => {
               color={EColor.color_43A3FF}
             />
             <Text style={styles.timeStart}>
-              {moment(props.todo.timeStart).format('HH:mm DD/MM/YYYY')}
+              {moment(new Date(props.todo.timeStart)).format(
+                'HH:mm DD/MM/YYYY',
+              )}
             </Text>
           </View>
           <View style={[styles.boxTime, {marginTop: rh(3)}]}>
@@ -89,7 +101,7 @@ const ItemTodo = (props: Props) => {
               color={EColor.color_FF0B0B}
             />
             <Text style={styles.timeEnd}>
-              {moment(props.todo.timeEnd).format('HH:mm DD/MM/YYYY')}
+              {moment(new Date(props.todo.timeEnd)).format('HH:mm DD/MM/YYYY')}
             </Text>
           </View>
         </View>

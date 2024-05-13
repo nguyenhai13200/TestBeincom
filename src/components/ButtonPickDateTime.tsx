@@ -7,25 +7,34 @@ import DatePicker from 'react-native-date-picker';
 import moment from 'moment';
 
 type Props = {
+  mode: 'time' | 'date' | 'datetime';
+  value?: Date;
   color?: string;
+  disabled?: boolean;
   onPress?: () => void;
   onChangeDate?: React.Dispatch<React.SetStateAction<string>>;
 };
 
 const ButtonPickDateTime = (props: Props) => {
-  const [dateSelect, setDateSelect] = useState(new Date());
+  const [dateSelect, setDateSelect] = useState(props.value || new Date());
   const [open, setOpen] = useState(false);
   return (
-    <TouchableOpacity style={styles.container} onPress={() => setOpen(true)}>
+    <TouchableOpacity
+      disabled={props.disabled}
+      style={styles.container}
+      onPress={() => setOpen(true)}>
       <IconClock height={rh(16)} width={rh(16)} color={props.color} />
       <Text style={[styles.text, {color: props.color || EColor.black}]}>
-        {moment(dateSelect).format('HH:mm DD/MM/YYYY')}
+        {props.mode === 'datetime' &&
+          moment(dateSelect).format('HH:mm DD/MM/YYYY')}
+        {props.mode === 'time' && moment(dateSelect).format('HH:mm')}
+        {props.mode === 'date' && moment(dateSelect).format('DD/MM/YYYY')}
       </Text>
       <DatePicker
         modal
         open={open}
         date={dateSelect || new Date()}
-        mode="datetime"
+        mode={props.mode || 'datetime'}
         minimumDate={new Date()}
         onConfirm={(date: Date) => {
           setOpen(false);
