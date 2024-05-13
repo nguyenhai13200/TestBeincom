@@ -30,7 +30,7 @@ export default function BottomTabBar({
 }: BottomTabBarProps) {
   const {bottom} = useSafeAreaInsets();
   return (
-    <View style={[styles.row, {paddingBottom: bottom}]}>
+    <View style={[styles.container, {paddingBottom: bottom}]}>
       {state.routes.map((route, index) => {
         const {options} = descriptors[route.key];
         const label = (
@@ -88,7 +88,10 @@ export default function BottomTabBar({
 }
 
 const styles = StyleSheet.create({
-  row: {flexDirection: 'row'},
+  container: {
+    flexDirection: 'row',
+    backgroundColor: EColor.white,
+  },
   btnBottomTab: {
     flex: 1,
     justifyContent: 'center',

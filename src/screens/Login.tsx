@@ -210,8 +210,8 @@ const Login = () => {
           CommonActions.reset({index: 0, routes: [{name: ERootStack.Main}]}),
         );
       }
-    } catch (nativeError) {
-      console.log('Login FB native error:', nativeError);
+    } catch (error) {
+      console.log('Login FB error:', error);
     }
   };
 

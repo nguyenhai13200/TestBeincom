@@ -4,6 +4,9 @@ import 'react-native-gesture-handler';
 import {Provider} from 'react-redux';
 import {store} from 'src/redux/store';
 import {GoogleSignin} from '@react-native-google-signin/google-signin';
+import moment from 'moment';
+
+moment.locale('vi');
 
 GoogleSignin.configure({
   iosClientId:
