@@ -130,7 +130,7 @@ const Login = () => {
           );
           await AsyncStorage.setItem(
             EStorageState.Auth,
-            JSON.stringify({email, password}),
+            JSON.stringify({email, password, providerId: EProviderId.Email}),
           );
           navigation.dispatch(StackActions.pop());
           showSuccessToastMessage('Login success');
@@ -464,6 +464,7 @@ const styles = StyleSheet.create({
     marginTop: rh(30),
   },
   textLoginOther: {
+    color: EColor.black,
     marginHorizontal: rh(8),
   },
   mr10: {marginRight: rw(15)},

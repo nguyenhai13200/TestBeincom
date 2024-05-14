@@ -11,6 +11,7 @@ import IconProgress from 'src/media/icons/IconProgress';
 import {EColor} from 'src/enums/colors';
 
 type Props = {
+  status?: ETodoStatus;
   onPress: (status: ETodoStatus) => void;
 };
 
@@ -27,7 +28,9 @@ const data: TDataDropdown[] = [
 ];
 
 const DropdownStatus = (props: Props) => {
-  const [value, setValue] = useState('1');
+  const [value, setValue] = useState(
+    data.filter(e => e.label === props.status)[0].value || '1',
+  );
   const statusSelect = data.filter(e => e.value === value)[0].label;
   const renderLeftIcon = () => {
     return (

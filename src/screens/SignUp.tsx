@@ -398,6 +398,7 @@ const styles = StyleSheet.create({
     marginTop: rh(60),
   },
   textLoginOther: {
+    color: EColor.black,
     marginHorizontal: rh(8),
   },
   mr10: {marginRight: rw(15)},

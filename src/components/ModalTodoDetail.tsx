@@ -133,7 +133,10 @@ const ModalTodoDetail = (props: Props) => {
                     </TouchableOpacity>
                   </View>
                   <Text style={styles.title}>Todo Detail</Text>
-                  <DropdownStatus onPress={handleChangeStatus} />
+                  <DropdownStatus
+                    status={values.status}
+                    onPress={handleChangeStatus}
+                  />
                   <InputAddTodo
                     editable={isEdit}
                     value={values.title}
