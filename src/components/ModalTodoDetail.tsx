@@ -128,7 +128,12 @@ const ModalTodoDetail = (props: Props) => {
                         />
                       </TouchableOpacity>
                     </View>
-                    <TouchableOpacity onPress={props.onClose}>
+                    <TouchableOpacity
+                      onPress={() => {
+                        props.onClose && props.onClose();
+                        setIsEdit(false);
+                        setIsRemove(false);
+                      }}>
                       <IconClose />
                     </TouchableOpacity>
                   </View>

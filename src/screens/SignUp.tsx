@@ -229,7 +229,7 @@ const SignUp = () => {
                   error={touched.username ? errors.username : ''}
                   placeholder="Your username"
                 />
-                <Text style={styles.mt10}>
+                <Text style={[styles.mt10, {color: EColor.color_666666}]}>
                   You can not change your username after success creating
                   account.
                 </Text>
