@@ -1,5 +1,5 @@
 <resources>
-    <string name="app_name">TestBeincom</string>
+    <string name="app_name">My Todos</string>
 
     <string name="facebook_app_id">842000124425266</string>
     <string name="fb_login_protocol_scheme">fb842000124425266</string>
